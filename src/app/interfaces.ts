@@ -11,54 +11,32 @@ export interface OneData {
 }
 
 export class DriftingBuoy {
-    private driftingBuoyInDB: DriftingBuoyInDB = {
-        no: -1,
+    private duoy: Buoy = {
+        id: -1,
         name: 'uncreated',
         imei: 'uncreated',
+        projectId: -1,
     };
 
-    public DriftingBuoy(driftingBuoyInDB: DriftingBuoyInDB) {
-        this.driftingBuoyInDB = driftingBuoyInDB;
+    public DriftingBuoy(duoy: Buoy) {
+        this.duoy = duoy;
     }
 
 
     public get getNumber(): number {
-        return this.driftingBuoyInDB.no;
+        return this.duoy.id;
     }
 
     public get getName(): string {
-        return this.driftingBuoyInDB.name;
+        return this.duoy.name;
     }
     public get getIMEI(): string {
-        return this.driftingBuoyInDB.imei;
+        return this.duoy.imei;
     }
 
 
 }
 
-export interface DriftingBuoyInDB {
-    no: number,
-    name: string,
-    imei: string,
-}
-
-export interface Project{
-    id: number,
-    name: string,
-    driftingbuoies: string[],
-    description: string,
-    createtime: Time,
-}
-
-export interface Position{
-    rowid: number,
-    imei: number,
-    longitude: string,
-    latitude: string,
-    sendtime: Time,
-    direction: number,
-    speed: number,
-}
 
 export interface MassMarker {
     lnglat: Array<string | number>,
@@ -70,4 +48,32 @@ export interface Lan{
     Id: number
     Latitude: number;
     Longitude: number;
+}
+
+
+//database data types
+export interface Buoy {
+    id: number,
+    imei: string,
+    name: string,
+    projectId: number,
+}
+
+export interface Project{
+    id: number,
+    name: string,
+    driftingbuoies: string[],
+    description: string,
+    createtime: Time,
+}
+
+export interface Position{
+    id: number,
+    driftingduoyImei: number,
+    longitude: string,
+    latitude: string,
+    sendtime: Time,
+    direction: number,
+    speed: number,
+    projectId: number
 }

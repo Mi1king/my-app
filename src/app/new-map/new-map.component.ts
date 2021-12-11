@@ -1,12 +1,13 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { MassMarker } from '../interfaces';
+import { Buoy, MassMarker, Project } from '../interfaces';
 import { MyPositionsService } from '../my-positions.service';
-import {Lan} from '../interfaces';
+import { Lan } from '../interfaces';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { DriftingBuoy, OneData } from '../interfaces';
+import { DriftingBuoy, OneData, Position } from '../interfaces';
 import { Data } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { BuoyService } from '../buoy.service';
 // import * as $ from 'jquery';
 declare var AMap: any;
 declare var AMapUI: any;
@@ -20,7 +21,43 @@ declare var RemoGeoLocation: any;
 
 
 export class NewMapComponent implements OnInit {
+  //new
 
+  //data from database
+  buoyList: Buoy[] = [];
+  projectList: Project[] = [];
+  positionList: Position[] = [];
+
+  showingBuoy: Buoy = {
+    id: -1,
+    name: "",
+    imei: "",
+    projectId: -1,
+  };
+
+  getBuoyList() {
+    this.buoyService.getAllBuoy().subscribe(p => this.buoyList = p.data.list);
+  }
+
+  showBuoyInfo(buoy : Buoy) {
+    this.showingBuoy = buoy;
+    this.visible = true;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //old
   city = '苏州';
   zoom = 12;
   viewMode = "3D";
@@ -71,15 +108,17 @@ export class NewMapComponent implements OnInit {
   }
   ];
   constructor(
+    private buoyService: BuoyService,
     private positionsService: MyPositionsService,
     private message: NzMessageService
   ) { }
 
   ngOnInit() {
+    // this.getPositions();
+    this.getBuoyList();
     this.createMap();
     // this.addplugin();
     // this.addControls(this.map);
-    this.getPositions();
     // this.showPositions();
     // this.makerTrackback();
   }
@@ -394,7 +433,7 @@ export class NewMapComponent implements OnInit {
   }
 
 
-  
+
   visible = false;
   open(): void {
     this.visible = true;
