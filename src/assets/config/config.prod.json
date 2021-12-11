@@ -1,0 +1,21 @@
+{
+    "env": {
+        "name": "DEV"
+    },
+    "appInsights": {
+        "instrumentationKey": "<dev-guid-here>"
+    },
+    "logging": {
+        "console": true,
+        "appInsights": false
+    },
+    "aad": {
+        "requireAuth": true,
+        "tenant": "<dev-guid-here>",
+        "clientId": "<dev-guid-here>"
+    },
+    "apiServer": {
+        "metadata": "http://localhost:3333",
+        "rules": "https://rules.demo.com/api/v1.0/"
+    }
+}

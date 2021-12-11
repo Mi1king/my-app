@@ -1,0 +1,196 @@
+<!-- <div id="amapContainer" class="amap-container"></div> -->
+
+<nz-layout>
+  <nz-sider nzCollapsible nz-menu-divider nzWidth="200px" nzTheme="light">
+    <ul nz-menu nzTheme="light" nzMode="vertical">
+      <li nz-submenu nzTitle="Developer">
+        <ul>
+          <li nz-menu-item>
+            <button nz-button nzType="primary" (click)="showHistory(['11'])">
+              start tracking (one position list)
+            </button>
+          </li>
+          <li nz-menu-item>
+            <button
+              nz-button
+              nzType="primary"
+              (click)="showHistory(['1', '2', '3'])"
+            >
+              start tracking (multiple position list)
+            </button>
+          </li>
+          <li nz-menu-item>
+            <button nz-button nzType="primary" (click)="pauseHistoryTracking()">
+              pause tracking
+            </button>
+          </li>
+          <li nz-menu-item>
+            <button nz-button nzType="primary" (click)="stopHistoryTracking()">
+              end tracking
+            </button>
+          </li>
+          <li nz-menu-item>
+            <button nz-button nzType="primary" (click)="showMassPoint(['11'])">
+              show one position list (mass markers)
+            </button>
+          </li>
+          <li nz-menu-item>
+            <button
+              nz-button
+              nzType="primary"
+              (click)="showMassPoint(['1', '2', '3'])"
+            >
+              show multiple position list (mass markers)
+            </button>
+          </li>
+          <li nz-menu-item>
+            <button
+              nz-button
+              nzType="primary"
+              (click)="hideMassPoint(['1', '2', '3'])"
+            >
+              hide mass markers
+            </button>
+          </li>
+          <li nz-menu-item>
+            <nz-select
+              [(ngModel)]="selectedValue"
+              [compareWith]="compareFn"
+              (ngModelChange)="changeLan($event)"
+              nzPlaceHolder="Choose"
+            >
+              <nz-option
+                *ngFor="let lan of languageList"
+                [nzValue]="lan"
+                [nzLabel]="lan.lable"
+              ></nz-option>
+            </nz-select>
+          </li>
+        </ul>
+      </li>
+      <li nz-submenu nzTitle="Drifting buoy">
+        <ul>
+          <li nz-menu-item *ngFor="let db of driftingBuoyList">
+            {{ db.getName}}
+          </li>
+          <li nz-menu-item>
+            <button nz-button nzType="primary" nzShape="circle" (click)="open()">
+              <i nz-icon nzType="plus-circle" nzTheme="outline"></i>
+            </button>
+          </li>
+        </ul>
+      </li>
+      <li nz-submenu nzTitle="Project"></li>
+      <li nz-menu-divider></li>
+    </ul>
+  </nz-sider>
+
+  <!-- <nz-header>header</nz-header> -->
+  <nz-layout>
+    <!-- <nz-content> -->
+    <div id="amapContainer" class="amap-container"></div>
+    <!-- </nz-content> -->
+  </nz-layout>
+  <!-- <nz-footer>footer</nz-footer> -->
+</nz-layout>
+
+
+<!-- TODO:请完成新增项目表单 -->
+<!-- TODO:请完成新增游标表单 -->
+<nz-drawer
+      [nzBodyStyle]="{ overflow: 'auto' }"
+      [nzMaskClosable]="false"
+      [nzWidth]="720"
+      [nzVisible]="visible"
+      nzTitle="Create"
+      [nzFooter]="footerTpl"
+      (nzOnClose)="close()"
+    >
+      <form nz-form *nzDrawerContent>
+        <div nz-row [nzGutter]="8">
+          <div nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label>Name</nz-form-label>
+              <nz-form-control>
+                <input nz-input placeholder="please enter user name" />
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+          <div nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label>Url</nz-form-label>
+              <nz-form-control>
+                <nz-input-group nzAddOnBefore="http://" nzAddOnAfter=".com">
+                  <input type="text" nz-input placeholder="please enter url" />
+                </nz-input-group>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+        </div>
+        <div nz-row [nzGutter]="8">
+          <div nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label>Owner</nz-form-label>
+              <nz-form-control>
+                <nz-select nzPlaceHolder="Please select an owner"></nz-select>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+          <div nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label>Type</nz-form-label>
+              <nz-form-control>
+                <nz-select nzPlaceHolder="Please choose the type"></nz-select>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+        </div>
+        <div nz-row [nzGutter]="8">
+          <div nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label>Approver</nz-form-label>
+              <nz-form-control>
+                <nz-select nzPlaceHolder="Please choose the approver"></nz-select>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+          <div nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label>DateTime</nz-form-label>
+              <nz-form-control>
+                <nz-range-picker></nz-range-picker>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+        </div>
+        <div nz-row [nzGutter]="8">
+          <div nz-col nzSpan="24">
+            <nz-form-item>
+              <nz-form-label>Description</nz-form-label>
+              <nz-form-control>
+                <textarea
+                  nz-input
+                  placeholder="please enter url description"
+                ></textarea>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+        </div>
+      </form>
+
+      <ng-template #footerTpl>
+        <div style="float: right">
+          <button nz-button style="margin-right: 8px;" (click)="close()">Cancel</button>
+          <button nz-button nzType="primary" (click)="close()">Submit</button>
+        </div>
+      </ng-template>
+    </nz-drawer>
+
+
+
+
+
+
+
+
+
