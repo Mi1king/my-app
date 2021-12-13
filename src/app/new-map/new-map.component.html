@@ -3,7 +3,12 @@
 <nz-layout>
   <nz-sider nzCollapsible nz-menu-divider nzWidth="200px" nzTheme="light">
     <ul nz-menu nzTheme="light" nzMode="vertical">
-      <li nz-submenu nzTitle="Developer">
+      <li
+        nz-submenu
+        nzTitle="Developer"
+        layout="column"
+        layout-align="center end"
+      >
         <ul>
           <li nz-menu-item>
             <button nz-button nzType="primary" (click)="showHistory(['11'])">
@@ -68,43 +73,57 @@
           </li>
         </ul>
       </li>
-      <li nz-submenu nzTitle="Drifting buoy">
+      <li nz-submenu nzTitle="Management">
         <ul>
-          <li nz-menu-item *ngFor="let buoy of buoyList">
-            <button nz-button nzType="default" (click)="showBuoyInfo(buoy)">
-              {{ buoy.name }}
-            </button>
+          <li nz-submenu nzTitle="Drifting buoy">
+            <ul>
+              <nz-list nzSplit="true" nzItemLayout="vertical">
+                <nz-list-item nz-menu-item *ngFor="let buoy of buoyList">
+                  <a (click)="showBuoyInfo(buoy)"> {{ buoy.name }}</a>
+                </nz-list-item>
+                <nz-list-item nz-menu-item>
+                  <a nz-button (click)="addBuoy()">Add buoy</a>
+                </nz-list-item>
+              </nz-list>
+            </ul>
           </li>
-          <li nz-menu-item>
-            <button
-              nz-button
-              nzType="primary"
-              nzShape="circle"
-              (click)="open()"
-            >
-              <i nz-icon nzType="plus-circle" nzTheme="outline"></i>
-            </button>
+          <li nz-submenu nzTitle="Project">
+            <ul>
+              <nz-list nzSplit="true" nzItemLayout="vertical">
+                <nz-list-item nz-menu-item *ngFor="let project of projectList">
+                  <a (click)="showProjectInfo(project)"> {{ project.name }}</a>
+                </nz-list-item>
+                <nz-list-item nz-menu-item>
+                  <a nz-button (click)="addProject()">Add project</a>
+                </nz-list-item>
+              </nz-list>
+            </ul>
           </li>
+        </ul>
+      </li>
+
+      <li nz-submenu nzTitle="Buoy">
+        <ul>
+          <nz-list nzSplit="true" nzItemLayout="vertical">
+            <nz-list-item nz-menu-item *ngFor="let buoy of buoyList">
+              <a (click)="showHistory([buoy])">
+                {{ buoy.name }}</a>
+            </nz-list-item>
+          </nz-list>
         </ul>
       </li>
       <li nz-submenu nzTitle="Project">
         <ul>
-          <li nz-menu-item *ngFor="let project of projectList">
-            <button nz-button nzType="default">Default Button</button>
-            {{ project.name }}
-          </li>
-          <li nz-menu-item>
-            <button
-              nz-button
-              nzType="primary"
-              nzShape="circle"
-              (click)="open()"
-            >
-              <i nz-icon nzType="plus-circle" nzTheme="outline"></i>
-            </button>
-          </li>
+          <nz-list nzSplit="true" nzItemLayout="vertical">
+            <nz-list-item nz-menu-item *ngFor="let project of projectList">
+              <a (click)="showHistory(getBuoyInProject(project))">
+                {{ project.name }}</a
+              >
+            </nz-list-item>
+          </nz-list>
         </ul>
       </li>
+      <nz-range-picker [nzShowTime]="true" [(ngModel)]="dateRange"></nz-range-picker>
     </ul>
   </nz-sider>
 
@@ -116,100 +135,231 @@
   </nz-layout>
   <!-- <nz-footer>footer</nz-footer> -->
 </nz-layout>
-
-<!-- TODO:请完成新增项目表单 -->
-<!-- TODO:请完成新增游标表单 -->
 <nz-drawer
   [nzBodyStyle]="{ overflow: 'auto' }"
   [nzMaskClosable]="false"
   [nzWidth]="400"
-  [nzVisible]="visible"
+  [nzVisible]="buoyFormVisible"
   [nzTitle]="showingBuoy.name"
-  [nzFooter]="footerTpl"
-  (nzOnClose)="close()"
+  [nzFooter]="buoyFooterTpl"
+  (nzOnClose)="buoyFormClose()"
 >
-<!-- TODO: finish this form with the buoy and project-->
-  <form nz-form *nzDrawerContent>
-    <div nz-row [nzGutter]="8">
-      <div nz-col nzSpan="12">
+  <form
+    nz-form
+    [formGroup]="buoyForm"
+    (ngSubmit)="submitBuoyForm()"
+    *nzDrawerContent
+  >
+    <div nz-row>
+      <div nz-col nzSpan="6">
         <nz-form-item>
-          <nz-form-label>Name</nz-form-label>
+          <nz-form-label>Id</nz-form-label>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="18">
+        <nz-form-item>
           <nz-form-control>
-            <input nz-input placeholder="please enter drfitng buoy name" />
+            <input
+              nz-input
+              [ngModel]="showingBuoy.id"
+              formControlName="id"
+              readonly="true"
+            />
           </nz-form-control>
         </nz-form-item>
       </div>
     </div>
-    <div nz-row [nzGutter]="8">
-      <div nz-col nzSpan="12">
+    <div nz-row>
+      <div nz-col nzSpan="6">
+        <nz-form-item>
+          <nz-form-label>Name</nz-form-label>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="18">
+        <nz-form-item>
+          <nz-form-control>
+            <input
+              nz-input
+              [ngModel]="showingBuoy.name"
+              formControlName="name"
+              placeholder="please enter drfitng buoy name"
+            />
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </div>
+    <div nz-row>
+      <div nz-col nzSpan="6">
         <nz-form-item>
           <nz-form-label>IMEI</nz-form-label>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="18">
+        <nz-form-item>
           <nz-form-control>
-            <nz-input-group nzAddOnBefore="http://" nzAddOnAfter=".com">
-              <input type="text" nz-input placeholder="please enter url" />
+            <nz-input-group>
+              <input
+                [ngModel]="showingBuoy.imei"
+                formControlName="imei"
+                type="text"
+                nz-input
+                placeholder="please enter the IMEI"
+              />
             </nz-input-group>
           </nz-form-control>
         </nz-form-item>
       </div>
     </div>
-
-    <div nz-row [nzGutter]="8">
-      <div nz-col nzSpan="12">
+    <div nz-row>
+      <div nz-col nzSpan="6">
         <nz-form-item>
-          <nz-form-label>Owner</nz-form-label>
-          <nz-form-control>
-            <nz-select nzPlaceHolder="Please select an owner"></nz-select>
-          </nz-form-control>
+          <nz-form-label>Project</nz-form-label>
         </nz-form-item>
       </div>
-      <div nz-col nzSpan="12">
+      <div nz-col nzSpan="18">
         <nz-form-item>
-          <nz-form-label>Type</nz-form-label>
-          <nz-form-control>
-            <nz-select nzPlaceHolder="Please choose the type"></nz-select>
-          </nz-form-control>
-        </nz-form-item>
-      </div>
-    </div>
-    <div nz-row [nzGutter]="8">
-      <div nz-col nzSpan="12">
-        <nz-form-item>
-          <nz-form-label>Approver</nz-form-label>
-          <nz-form-control>
-            <nz-select nzPlaceHolder="Please choose the approver"></nz-select>
-          </nz-form-control>
-        </nz-form-item>
-      </div>
-      <div nz-col nzSpan="12">
-        <nz-form-item>
-          <nz-form-label>DateTime</nz-form-label>
-          <nz-form-control>
-            <nz-range-picker></nz-range-picker>
-          </nz-form-control>
-        </nz-form-item>
-      </div>
-    </div>
-    <div nz-row [nzGutter]="8">
-      <div nz-col nzSpan="24">
-        <nz-form-item>
-          <nz-form-label>Description</nz-form-label>
-          <nz-form-control>
-            <textarea
-              nz-input
-              placeholder="please enter url description"
-            ></textarea>
+          <nz-form-control standalone>
+            <nz-select
+              [(ngModel)]="showingBuoy.projectId"
+              nzPlaceHolder="Please select a project"
+              formControlName="project"
+            >
+              <nz-option
+                *ngFor="let project of projectList"
+                [nzValue]="project.id"
+                [nzLabel]="project.name"
+              ></nz-option>
+            </nz-select>
           </nz-form-control>
         </nz-form-item>
       </div>
     </div>
   </form>
 
-  <ng-template #footerTpl>
-    <div style="float: right">
-      <button nz-button style="margin-right: 8px" (click)="close()">
-        Cancel
-      </button>
-      <button nz-button nzType="primary" (click)="close()">Submit</button>
+  <ng-template #buoyFooterTpl>
+    <div nz-row>
+      <div nz-col nzSpan="12">
+        <button nz-button nzType="primary" (click)="submitBuoyForm()">
+          Submit Buoy
+        </button>
+      </div>
+      <div nz-col nzSpan="12">
+        <button nz-button (click)="buoyFormClose()">Cancel</button>
+      </div>
+    </div>
+  </ng-template>
+</nz-drawer>
+
+<nz-drawer
+  [nzBodyStyle]="{ overflow: 'auto' }"
+  [nzMaskClosable]="false"
+  [nzWidth]="400"
+  [nzVisible]="projectFormVisible"
+  [nzTitle]="showingProject.name"
+  [nzFooter]="projectFooterTpl"
+  (nzOnClose)="projectFormClose()"
+>
+  <!-- TODO: finish this form with the project-->
+  <form
+    nz-form
+    [formGroup]="projectForm"
+    (ngSubmit)="submitProjectForm()"
+    *nzDrawerContent
+  >
+    <div nz-row>
+      <div nz-col nzSpan="6">
+        <nz-form-item>
+          <nz-form-label>Id</nz-form-label>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="18">
+        <nz-form-item>
+          <nz-form-control>
+            <input
+              nz-input
+              [ngModel]="showingProject.id"
+              formControlName="id"
+              readonly="true"
+            />
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </div>
+    <div nz-row>
+      <div nz-col nzSpan="6">
+        <nz-form-item>
+          <nz-form-label>Name</nz-form-label>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="18">
+        <nz-form-item>
+          <nz-form-control>
+            <input
+              nz-input
+              [ngModel]="showingProject.name"
+              formControlName="name"
+              placeholder="please enter project name"
+            />
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </div>
+    <div nz-row>
+      <div nz-col nzSpan="6">
+        <nz-form-item>
+          <nz-form-label>Description</nz-form-label>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="18">
+        <nz-form-item>
+          <nz-form-control>
+            <nz-textarea-count [nzMaxCharacterCount]="100">
+              <textarea
+                [ngModel]="showingProject.description"
+                formControlName="description"
+                type="text"
+                rows="4"
+                nz-input
+              ></textarea>
+            </nz-textarea-count>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </div>
+    <div nz-row>
+      <div nz-col nzSpan="6">
+        <nz-form-item>
+          <nz-form-label>Create time</nz-form-label>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="18">
+        <nz-form-item>
+          <nz-form-control standalone>
+            <nz-input-group>
+              <input
+                [ngModel]="showingProject.createtime"
+                formControlName="createtime"
+                type="text"
+                nz-input
+                readonly="true"
+              />
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </div>
+  </form>
+
+  <ng-template #projectFooterTpl>
+    <div nz-row>
+      <div nz-col nzSpan="12">
+        <button nz-button nzType="primary" (click)="submitProjectForm()">
+          Submit Project
+        </button>
+      </div>
+      <div nz-col nzSpan="12">
+        <button nz-button (click)="projectFormClose()">Cancel</button>
+      </div>
     </div>
   </ng-template>
 </nz-drawer>

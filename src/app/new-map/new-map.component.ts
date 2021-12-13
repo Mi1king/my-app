@@ -8,6 +8,8 @@ import { DriftingBuoy, OneData, Position } from '../interfaces';
 import { Data } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { BuoyService } from '../buoy.service';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { NzFormTooltipIcon } from 'ng-zorro-antd/form';
 // import * as $ from 'jquery';
 declare var AMap: any;
 declare var AMapUI: any;
@@ -22,7 +24,7 @@ declare var RemoGeoLocation: any;
 
 export class NewMapComponent implements OnInit {
   //new
-
+  dateRange: Date[] = [];
   //data from database
   buoyList: Buoy[] = [];
   projectList: Project[] = [];
@@ -34,14 +36,101 @@ export class NewMapComponent implements OnInit {
     imei: "",
     projectId: -1,
   };
+  showingProject: Project = {
+    id: -1,
+    name: "",
+    createtime: new Date(),
+    description: "",
+  };
+
+
+  buoyForm!: FormGroup;
+  projectForm!: FormGroup;
+  buoyFormVisible = false;
+  projectFormVisible = false;
 
   getBuoyList() {
     this.buoyService.getAllBuoy().subscribe(p => this.buoyList = p.data.list);
   }
+  getProjectList() {
+    this.buoyService.getAllProject().subscribe(p => this.projectList = p.data.list);
+  }
+  getPositionList(buoy: any) {
+    let dateRange = this.dateRange;
+    if (dateRange.length <= 0) {
+      console.log("choose date range first");
+    } else {
+      this.buoyService.getConditionalPosition(buoy, dateRange).subscribe(p => this.positionList = p.data.list);
+    }
+  }
 
-  showBuoyInfo(buoy : Buoy) {
+  showBuoyInfo(buoy: Buoy) {
     this.showingBuoy = buoy;
-    this.visible = true;
+    this.buoyFormOpen();
+  }
+  showProjectInfo(project: Project) {
+    this.showingProject = project;
+    this.projectFormOpen();
+  }
+
+  addBuoy(): void {//TODO:please complete add buoy function
+
+  }
+  addProject(): void {//TODO:please complete add project function
+
+  }
+
+  buoyFormOpen(): void {
+    this.buoyFormVisible = true;
+    console.log("buoy form open");
+  }
+
+  buoyFormClose(): void {
+    this.buoyFormVisible = false;
+    console.log("buoy form close");
+  }
+
+
+  projectFormOpen(): void {
+    this.projectFormVisible = true;
+    console.log("project form open");
+  }
+
+  projectFormClose(): void {
+    this.projectFormVisible = false;
+    console.log("project form close");
+  }
+
+  submitBuoyForm(): void {
+    console.log('submit buoy');
+    if (this.buoyForm.valid) {
+      console.log(this.buoyForm.value, this.buoyService.updateBuoy(this.buoyForm.value));
+      //TODO:compelet the buoy update form function...to database
+    } else {
+      Object.values(this.buoyForm.controls).forEach(control => {
+        if (control.invalid) {
+          control.markAsDirty();
+          control.updateValueAndValidity({ onlySelf: true });
+        }
+      });
+      console.log("fail");
+    }
+  }
+
+  submitProjectForm(): void {
+    console.log('submit prject')
+    if (this.projectForm.valid) {
+      console.log(this.projectForm.value, this.buoyService.updateProject(this.projectForm.value));
+      //TODO:compelet the project update form function...to database
+    } else {
+      Object.values(this.projectForm.controls).forEach(control => {
+        if (control.invalid) {
+          control.markAsDirty();
+          control.updateValueAndValidity({ onlySelf: true });
+        }
+      });
+      console.log("fail");
+    }
   }
 
 
@@ -54,6 +143,10 @@ export class NewMapComponent implements OnInit {
 
 
 
+  getBuoyInProject(project: any): any[] {
+    let buoy= this.buoyList.filter(p => p.projectId === project.id);
+    return buoy;
+  }
 
 
 
@@ -114,8 +207,23 @@ export class NewMapComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    this.buoyForm = new FormGroup({
+      id: new FormControl(null, Validators.required),
+      name: new FormControl(null, Validators.required),
+      imei: new FormControl(null, Validators.required),
+      project: new FormControl(null, Validators.required),
+    });
+
+    this.projectForm = new FormGroup({
+      id: new FormControl(null, Validators.required),
+      name: new FormControl(null, Validators.required),
+      description: new FormControl(null, Validators.required),
+      createtime: new FormControl(null, Validators.required),
+    });
+
     // this.getPositions();
     this.getBuoyList();
+    this.getProjectList();
     this.createMap();
     // this.addplugin();
     // this.addControls(this.map);
@@ -300,11 +408,23 @@ export class NewMapComponent implements OnInit {
     return filterData;
   }
 
-  showHistory(ids: string[]) {
-    ids.forEach(id => {
-      this.gethistorical(this.getDataByIMEI(id));
-    });
+  // showHistory(ids: string[]) {
+  //   ids.forEach(id => {
+  //     this.gethistorical(this.getDataByIMEI(id));
+  //   });
+  // } 
+  showHistory(buoyList: any[]) {
+    console.log(buoyList);
+    if (buoyList == undefined) {
+      console.log("The project contains 0 buoies");
+    } else {
+      buoyList.forEach(buoy => {
+        this.gethistorical(this.getPositionList(buoy));
+        console.log(buoy);
+      });
+    }
   }
+
   showMassPoint(ids: string[]) {
     ids.forEach(id => {
       this.showPositions(this.getDataByIMEI(id));
@@ -433,13 +553,4 @@ export class NewMapComponent implements OnInit {
   }
 
 
-
-  visible = false;
-  open(): void {
-    this.visible = true;
-  }
-
-  close(): void {
-    this.visible = false;
-  }
 }

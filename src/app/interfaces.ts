@@ -62,9 +62,8 @@ export interface Buoy {
 export interface Project{
     id: number,
     name: string,
-    driftingbuoies: string[],
     description: string,
-    createtime: Time,
+    createtime: Date,
 }
 
 export interface Position{
