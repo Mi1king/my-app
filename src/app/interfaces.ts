@@ -71,7 +71,7 @@ export interface Position{
     driftingduoyImei: number,
     longitude: string,
     latitude: string,
-    sendtime: Time,
+    sendtime: Date,
     direction: number,
     speed: number,
     projectId: number

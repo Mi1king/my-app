@@ -1,6 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { Buoy, MassMarker, Project } from '../interfaces';
-import { MyPositionsService } from '../my-positions.service';
 import { Lan } from '../interfaces';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -10,6 +9,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { BuoyService } from '../buoy.service';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { NzFormTooltipIcon } from 'ng-zorro-antd/form';
+import  {Utility,DateFormatOption} from '../helper';
 // import * as $ from 'jquery';
 declare var AMap: any;
 declare var AMapUI: any;
@@ -24,6 +24,7 @@ declare var RemoGeoLocation: any;
 
 export class NewMapComponent implements OnInit {
   //new
+  timeFormatStr = 'yyyy-MM-dd HH:mm:ss';
   dateRange: Date[] = [];
   //data from database
   buoyList: Buoy[] = [];
@@ -56,10 +57,13 @@ export class NewMapComponent implements OnInit {
     this.buoyService.getAllProject().subscribe(p => this.projectList = p.data.list);
   }
   getPositionList(buoy: any) {
-    let dateRange = this.dateRange;
+    let dateRange = [Utility.formatDate(this.dateRange[0],this.timeFormatStr),Utility.formatDate(this.dateRange[1],this.timeFormatStr)];
     if (dateRange.length <= 0) {
       console.log("choose date range first");
     } else {
+      console.log('imei:', buoy.imei);
+      console.log('start time:', dateRange[0]);
+      console.log('end time:', dateRange[1]);
       this.buoyService.getConditionalPosition(buoy, dateRange).subscribe(p => this.positionList = p.data.list);
     }
   }
@@ -202,7 +206,6 @@ export class NewMapComponent implements OnInit {
   ];
   constructor(
     private buoyService: BuoyService,
-    private positionsService: MyPositionsService,
     private message: NzMessageService
   ) { }
 
@@ -339,10 +342,10 @@ export class NewMapComponent implements OnInit {
   }
 
 
-  getPositions(): void {
-    this.positionsService.getData()
-      .subscribe(p => this.data = p.data.list);
-  }
+  // getPositions(): void {
+  //   this.positionsService.getData()
+  //     .subscribe(p => this.data = p.data.list);
+  // }
 
   createMap() {
     this.map = new AMap.Map('amapContainer', {
@@ -419,7 +422,9 @@ export class NewMapComponent implements OnInit {
       console.log("The project contains 0 buoies");
     } else {
       buoyList.forEach(buoy => {
-        this.gethistorical(this.getPositionList(buoy));
+        //TODO: getposition之后this.positionList 并不会立即更新,导致为空值,随即的trackingbuoy就无法正常运行
+        this.getPositionList(buoy);
+        this.trackingBuoy(buoy);
         console.log(buoy);
       });
     }
@@ -437,10 +442,20 @@ export class NewMapComponent implements OnInit {
     // });
   }
 
+
+  trackingBuoy(buoy: any){
+    let trackingPositionList = this.positionList.filter(p => p.driftingduoyImei === buoy.imei);
+    if (trackingPositionList){
+      console.log("start tracking:", buoy.imei);
+      this.gethistorical(trackingPositionList);
+    }
+  }
+
+
   //轨迹回放
   gethistorical(data: any) {
     var lineArr: any[] = [];
-    (data as OneData[]).forEach(element => {
+    data.forEach((element: { longitude: any; latitude: any; }) => {
       lineArr.push([element.longitude, element.latitude])
     });
 
@@ -553,4 +568,15 @@ export class NewMapComponent implements OnInit {
   }
 
 
+
+  //dev method
+  logBuoyListDev(): void{
+    console.log('current buoy list:',this.buoyList);
+  }
+  logPositionListDev(): void{
+    console.log('current position list:',this.positionList);
+  }
+  logPorjectListDev(): void{
+    console.log('current project list:',this.projectList);
+  }
 }

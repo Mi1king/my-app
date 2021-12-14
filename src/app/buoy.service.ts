@@ -20,7 +20,7 @@ export class BuoyService {
   private getAllBuoyURL = this.buoyURL + '/all';  // URL to web api
   private getAllProjectURL = this.projectURL + '/all';  // URL to web api
   private getAllPositionURL = this.positionURL + '/all';  // URL to web api
-  private getConditionalPositionURL = this.positionURL + '/condition ';  // URL to web api
+  private getConditionalPositionURL = this.positionURL + '/condition';  // URL to web api
 
 
   private addBuoyURL = this.buoyURL + '/add';  // URL to web api
@@ -63,11 +63,10 @@ export class BuoyService {
       headers: this.httpOptions.headers,
       params: new HttpParams()
         .set('driftingbuoy_imei', buoy.imei)
-        // .set('startTime', dateRange[0])
-        // .set('endTime', dateRange[1])
+        .set('startTime', dateRange[0])
+        .set('endTime', dateRange[1])
     };
-    //TODO:check the conditonal position function after backend service is completed
-    return this.http.post(this.getConditionalPositionURL, httpOptions);
+    return this.http.get(this.getConditionalPositionURL, httpOptions);
   }
 
   updateBuoy(buoy: any) {

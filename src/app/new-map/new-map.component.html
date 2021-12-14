@@ -11,6 +11,21 @@
       >
         <ul>
           <li nz-menu-item>
+            <button nz-button nzType="primary" (click)="logBuoyListDev()">
+              log current buoy list
+            </button>
+          </li>
+          <li nz-menu-item>
+            <button nz-button nzType="primary" (click)="logPorjectListDev()">
+              log current project list
+            </button>
+          </li>
+          <li nz-menu-item>
+            <button nz-button nzType="primary" (click)="logPositionListDev()">
+              log current position list
+            </button>
+          </li>
+          <li nz-menu-item>
             <button nz-button nzType="primary" (click)="showHistory(['11'])">
               start tracking (one position list)
             </button>
@@ -127,6 +142,9 @@
     </ul>
   </nz-sider>
 
+
+
+  <!-- form below -->
   <!-- <nz-header>header</nz-header> -->
   <nz-layout>
     <!-- <nz-content> -->
