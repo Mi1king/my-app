@@ -57,14 +57,19 @@ export class NewMapComponent implements OnInit {
     this.buoyService.getAllProject().subscribe(p => this.projectList = p.data.list);
   }
   getPositionList(buoy: any) {
-    let dateRange = [Utility.formatDate(this.dateRange[0],this.timeFormatStr),Utility.formatDate(this.dateRange[1],this.timeFormatStr)];
-    if (dateRange.length <= 0) {
-      console.log("choose date range first");
+    if (this.dateRange.length <= 0) {
+      this.createMessage("info", "choose date range first");
     } else {
+      let dateRange = [Utility.formatDate(this.dateRange[0],this.timeFormatStr),Utility.formatDate(this.dateRange[1],this.timeFormatStr)];
       console.log('imei:', buoy.imei);
       console.log('start time:', dateRange[0]);
       console.log('end time:', dateRange[1]);
-      this.buoyService.getConditionalPosition(buoy, dateRange).subscribe(p => this.positionList = p.data.list);
+      this.buoyService.getConditionalPosition(buoy, dateRange).subscribe(p =>{
+        // this.loading = false;
+        this.positionList = p.data.list;
+        console.log(this.positionList);
+        this.trackingBuoy(buoy);
+      } )
     }
   }
 
@@ -149,6 +154,7 @@ export class NewMapComponent implements OnInit {
 
   getBuoyInProject(project: any): any[] {
     let buoy= this.buoyList.filter(p => p.projectId === project.id);
+    console.log("Buoy in project ", project.id, " is ", buoy);
     return buoy;
   }
 
@@ -417,14 +423,16 @@ export class NewMapComponent implements OnInit {
   //   });
   // } 
   showHistory(buoyList: any[]) {
-    console.log(buoyList);
+    console.log("Prepare to tracking: ", buoyList);
+    if (this.currentTrackingLineList.length > 0){
+      this.stopHistoryTracking();
+    }
+
     if (buoyList == undefined) {
       console.log("The project contains 0 buoies");
     } else {
       buoyList.forEach(buoy => {
-        //TODO: getposition之后this.positionList 并不会立即更新,导致为空值,随即的trackingbuoy就无法正常运行
-        this.getPositionList(buoy);
-        this.trackingBuoy(buoy);
+        this.getPositionList(buoy)
         console.log(buoy);
       });
     }
@@ -443,9 +451,11 @@ export class NewMapComponent implements OnInit {
   }
 
 
+
   trackingBuoy(buoy: any){
-    let trackingPositionList = this.positionList.filter(p => p.driftingduoyImei === buoy.imei);
-    if (trackingPositionList){
+    let positionList = this.positionList;
+    let trackingPositionList = positionList.filter(p => p.driftingbuoyImei === buoy.imei);
+    if (trackingPositionList.length > 0){
       console.log("start tracking:", buoy.imei);
       this.gethistorical(trackingPositionList);
     }

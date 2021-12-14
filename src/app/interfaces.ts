@@ -11,27 +11,27 @@ export interface OneData {
 }
 
 export class DriftingBuoy {
-    private duoy: Buoy = {
+    private buoy: Buoy = {
         id: -1,
         name: 'uncreated',
         imei: 'uncreated',
         projectId: -1,
     };
 
-    public DriftingBuoy(duoy: Buoy) {
-        this.duoy = duoy;
+    public DriftingBuoy(buoy: Buoy) {
+        this.buoy = buoy;
     }
 
 
     public get getNumber(): number {
-        return this.duoy.id;
+        return this.buoy.id;
     }
 
     public get getName(): string {
-        return this.duoy.name;
+        return this.buoy.name;
     }
     public get getIMEI(): string {
-        return this.duoy.imei;
+        return this.buoy.imei;
     }
 
 
@@ -68,7 +68,7 @@ export interface Project{
 
 export interface Position{
     id: number,
-    driftingduoyImei: number,
+    driftingbuoyImei: string,
     longitude: string,
     latitude: string,
     sendtime: Date,

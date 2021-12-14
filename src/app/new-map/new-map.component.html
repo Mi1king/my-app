@@ -40,16 +40,6 @@
             </button>
           </li>
           <li nz-menu-item>
-            <button nz-button nzType="primary" (click)="pauseHistoryTracking()">
-              pause tracking
-            </button>
-          </li>
-          <li nz-menu-item>
-            <button nz-button nzType="primary" (click)="stopHistoryTracking()">
-              end tracking
-            </button>
-          </li>
-          <li nz-menu-item>
             <button nz-button nzType="primary" (click)="showMassPoint(['11'])">
               show one position list (mass markers)
             </button>
@@ -121,8 +111,7 @@
         <ul>
           <nz-list nzSplit="true" nzItemLayout="vertical">
             <nz-list-item nz-menu-item *ngFor="let buoy of buoyList">
-              <a (click)="showHistory([buoy])">
-                {{ buoy.name }}</a>
+              <a (click)="showHistory([buoy])"> {{ buoy.name }}</a>
             </nz-list-item>
           </nz-list>
         </ul>
@@ -138,11 +127,24 @@
           </nz-list>
         </ul>
       </li>
-      <nz-range-picker [nzShowTime]="true" [(ngModel)]="dateRange"></nz-range-picker>
+      <li nz-menu-item>
+        <nz-range-picker
+          [nzShowTime]="true"
+          [(ngModel)]="dateRange"
+        ></nz-range-picker>
+      </li>
+      <li nz-menu-item>
+        <button nz-button nzType="text" (click)="pauseHistoryTracking()">
+          Pause tracking
+        </button>
+      </li>
+      <li nz-menu-item>
+        <button nz-button nzType="text" (click)="stopHistoryTracking()">
+          End tracking
+        </button>
+      </li>
     </ul>
   </nz-sider>
-
-
 
   <!-- form below -->
   <!-- <nz-header>header</nz-header> -->
@@ -246,7 +248,8 @@
                 *ngFor="let project of projectList"
                 [nzValue]="project.id"
                 [nzLabel]="project.name"
-              ></nz-option>
+              >
+              </nz-option>
             </nz-select>
           </nz-form-control>
         </nz-form-item>
