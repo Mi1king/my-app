@@ -1,8 +1,12 @@
 <!-- <div id="amapContainer" class="amap-container"></div> -->
 
 <nz-layout>
-  <nz-sider nzCollapsible nz-menu-divider nzWidth="200px" nzTheme="light">
+  <!-- <nz-sider nzCollapsible nz-menu-divider nzWidth="200px" nzTheme="light"> -->
+  <nz-sider nz-menu-divider nzWidth="200px" nzTheme="light">
     <ul nz-menu nzTheme="light" nzMode="vertical">
+      <li nz-menu-item layout="column" layout-align="center end">
+        <nz-switch [(ngModel)]="isTrackingMode" nzCheckedChildren="Tracking" nzUnCheckedChildren="Position"></nz-switch>
+      </li>
       <li
         nz-submenu
         nzTitle="Developer"

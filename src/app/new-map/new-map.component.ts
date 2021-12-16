@@ -9,7 +9,8 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { BuoyService } from '../buoy.service';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { NzFormTooltipIcon } from 'ng-zorro-antd/form';
-import  {Utility,DateFormatOption} from '../helper';
+import { Utility, DateFormatOption } from '../helper';
+import { Timestamp } from 'rxjs/internal/operators/timestamp';
 // import * as $ from 'jquery';
 declare var AMap: any;
 declare var AMapUI: any;
@@ -24,6 +25,7 @@ declare var RemoGeoLocation: any;
 
 export class NewMapComponent implements OnInit {
   //new
+  isTrackingMode = true;
   timeFormatStr = 'yyyy-MM-dd HH:mm:ss';
   dateRange: Date[] = [];
   //data from database
@@ -60,16 +62,27 @@ export class NewMapComponent implements OnInit {
     if (this.dateRange.length <= 0) {
       this.createMessage("info", "choose date range first");
     } else {
-      let dateRange = [Utility.formatDate(this.dateRange[0],this.timeFormatStr),Utility.formatDate(this.dateRange[1],this.timeFormatStr)];
+      let dateRange = [Utility.formatDate(this.dateRange[0], this.timeFormatStr), Utility.formatDate(this.dateRange[1], this.timeFormatStr)];
       console.log('imei:', buoy.imei);
       console.log('start time:', dateRange[0]);
       console.log('end time:', dateRange[1]);
-      this.buoyService.getConditionalPosition(buoy, dateRange).subscribe(p =>{
+      this.buoyService.getConditionalPosition(buoy, dateRange).subscribe(p => {
         // this.loading = false;
         this.positionList = p.data.list;
         console.log(this.positionList);
-        this.trackingBuoy(buoy);
-      } )
+
+        let historyPositionList = this.filterPositionBuoy(buoy)
+        if (historyPositionList.length <= 0) {
+          console.log("no data with buoy:", buoy.imei);
+        } else {
+          console.log("start with buoy:", buoy.imei);
+          if (this.isTrackingMode) {
+            this.gethistorical(historyPositionList);
+          } else {
+            this.showPositions(historyPositionList);
+          }
+        }
+      })
     }
   }
 
@@ -153,7 +166,7 @@ export class NewMapComponent implements OnInit {
 
 
   getBuoyInProject(project: any): any[] {
-    let buoy= this.buoyList.filter(p => p.projectId === project.id);
+    let buoy = this.buoyList.filter(p => p.projectId === project.id);
     console.log("Buoy in project ", project.id, " is ", buoy);
     return buoy;
   }
@@ -364,20 +377,19 @@ export class NewMapComponent implements OnInit {
     });
   }
 
-  showPositions(input: any) {
+  showPositions(positionList: any[]) {
     var data: object[] = [];
 
-    (input as OneData[]).forEach(element => {
+    positionList.forEach((position: { id:any; longitude: any; latitude: any; driftingbuoyImei: any; sendtime: any; direction: any; speed: any; }) => {
+      // console.log('DEBUG:', position.longitude, position.latitude);
       data.push(
         {
-          lnglat: [element.longitude, element.latitude]
-          , name: element.project.toString(),
-          imei: element.imei,
-          longitude: element.longitude,
-          latitude: element.latitude,
-          sendTime: element.sendtime,
-          speed: element.speed,
-          direction: element.direction,
+          // name: position.id,
+          imei: position.driftingbuoyImei,
+          lnglat: [position.longitude, position.latitude],
+          sendTime: position.sendtime,
+          direction: position.direction,
+          speed: position.speed,
         }
       )
     });
@@ -396,15 +408,18 @@ export class NewMapComponent implements OnInit {
     var marker = new AMap.Marker({ content: ' ', map: this.map });
     massMarks.on('mouseover', function (e: any) {
       marker.setPosition(e.data.lnglat);
+      console.log(e.data.lnglat);
+      
       marker.setLabel({
         content:
           [
-            ["MEI:", e.data.imei as unknown as string].join(" "),
-            ["Longitude:", e.data.longitude].join(" "),
-            ["Latitude:", e.data.latitude].join(" "),
+            // ["ID:", e.data.id].join(" "),
+            ["MEI:", e.data.imei].join(" "),
+            ["Longitude:", e.data.lnglat.Q].join(" "),
+            ["Latitude:", e.data.lnglat.R].join(" "),
             ["SendTime:", e.data.sendTime].join(" "),
-            ["Speed:", e.data.speed].join(" "),
             ["Direction:", e.data.direction].join(" "),
+            ["Speed:", e.data.speed].join(" "),
           ].join("<br>")
       })
     });
@@ -423,18 +438,24 @@ export class NewMapComponent implements OnInit {
   //   });
   // } 
   showHistory(buoyList: any[]) {
-    console.log("Prepare to tracking: ", buoyList);
-    if (this.currentTrackingLineList.length > 0){
-      this.stopHistoryTracking();
-    }
-
+    console.log(this.isTrackingMode);
     if (buoyList == undefined) {
-      console.log("The project contains 0 buoies");
+      console.log("No buoy need to track");
     } else {
+      // if (this.isTrackingMode) {//回放模式
+      console.log("Prepare to tracking for buoy: ", buoyList);
+      if (this.currentTrackingLineList.length > 0) {
+        this.stopHistoryTracking();
+      }
       buoyList.forEach(buoy => {
         this.getPositionList(buoy)
-        console.log(buoy);
       });
+      // } else {//展示历史轨迹数据模式
+      //   console.log("Prepare to position for buoy: ", buoyList);
+      //   buoyList.forEach(buoy => {
+      //     this.showPositions(buoy);
+      //   });
+      // }
     }
   }
 
@@ -452,13 +473,10 @@ export class NewMapComponent implements OnInit {
 
 
 
-  trackingBuoy(buoy: any){
+  filterPositionBuoy(buoy: any): any[] {
     let positionList = this.positionList;
-    let trackingPositionList = positionList.filter(p => p.driftingbuoyImei === buoy.imei);
-    if (trackingPositionList.length > 0){
-      console.log("start tracking:", buoy.imei);
-      this.gethistorical(trackingPositionList);
-    }
+    let historyPositionList = positionList.filter(p => p.driftingbuoyImei === buoy.imei);
+    return historyPositionList;
   }
 
 
@@ -485,7 +503,7 @@ export class NewMapComponent implements OnInit {
       map: this.map,
       path: lineArr,
       showDir: true,
-      strokeColor: "#AF5",  //线颜色
+      strokeColor: "#28F",  //线颜色
       // strokeOpacity: 1,     //线透明度
       strokeWeight: 6,      //线宽
       // strokeStyle: "solid"  //线样式
@@ -495,7 +513,7 @@ export class NewMapComponent implements OnInit {
     var passedPolyline = new AMap.Polyline({
       map: this.map,
       // path: lineArr,
-      strokeColor: "#28F",  //线颜色
+      strokeColor: "#ff8040",  //线颜色
       // strokeOpacity: 1,     //线透明度
       strokeWeight: 6,      //线宽
       // strokeStyle: "solid"  //线样式
@@ -580,13 +598,13 @@ export class NewMapComponent implements OnInit {
 
 
   //dev method
-  logBuoyListDev(): void{
-    console.log('current buoy list:',this.buoyList);
+  logBuoyListDev(): void {
+    console.log('current buoy list:', this.buoyList);
   }
-  logPositionListDev(): void{
-    console.log('current position list:',this.positionList);
+  logPositionListDev(): void {
+    console.log('current position list:', this.positionList);
   }
-  logPorjectListDev(): void{
-    console.log('current project list:',this.projectList);
+  logPorjectListDev(): void {
+    console.log('current project list:', this.projectList);
   }
 }
