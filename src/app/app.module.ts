@@ -105,6 +105,7 @@ const ngZorroConfig: NzConfig = {
     NewMapComponent
   ],
   imports: [
+    NzDatePickerModule,
     NzAffixModule,
     NzAlertModule,
     NzAnchorModule,

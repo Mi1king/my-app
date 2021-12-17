@@ -5,7 +5,11 @@
   <nz-sider nz-menu-divider nzWidth="200px" nzTheme="light">
     <ul nz-menu nzTheme="light" nzMode="vertical">
       <li nz-menu-item layout="column" layout-align="center end">
-        <nz-switch [(ngModel)]="isTrackingMode" nzCheckedChildren="Tracking" nzUnCheckedChildren="Position"></nz-switch>
+        <nz-switch
+          [(ngModel)]="isTrackingMode"
+          nzCheckedChildren="Tracking"
+          nzUnCheckedChildren="Position"
+        ></nz-switch>
       </li>
       <li
         nz-submenu
@@ -131,11 +135,34 @@
           </nz-list>
         </ul>
       </li>
-      <li nz-menu-item>
+      <!-- <li nz-menu-item>
         <nz-range-picker
           [nzShowTime]="true"
           [(ngModel)]="dateRange"
         ></nz-range-picker>
+      </li> -->
+      <li nz-menu-item>
+        <nz-date-picker
+          [nzInputReadOnly]='true'
+          [nzDisabledDate]="disabledStartDate"
+          nzShowTime
+          [nzFormat]="timeFormatStr"
+          [(ngModel)]="selectedStartDate"
+          nzPlaceHolder="Start"
+          (nzOnOpenChange)="handleStartOpenChange($event)"
+        ></nz-date-picker>
+      </li>
+      <li nz-menu-item>
+        <nz-date-picker
+          #endDatePicker
+          [nzInputReadOnly]='true'
+          [nzDisabledDate]="disabledEndDate"
+          nzShowTime
+          [nzFormat]="timeFormatStr"
+          [(ngModel)]="selectedEndDate"
+          nzPlaceHolder="End"
+          (nzOnOpenChange)="handleEndOpenChange($event)"
+        ></nz-date-picker>
       </li>
       <li nz-menu-item>
         <button nz-button nzType="text" (click)="pauseHistoryTracking()">

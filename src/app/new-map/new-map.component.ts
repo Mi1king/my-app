@@ -11,6 +11,8 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { NzFormTooltipIcon } from 'ng-zorro-antd/form';
 import { Utility, DateFormatOption } from '../helper';
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
+import { NzDatePickerComponent } from 'ng-zorro-antd/date-picker';
+
 // import * as $ from 'jquery';
 declare var AMap: any;
 declare var AMapUI: any;
@@ -27,7 +29,7 @@ export class NewMapComponent implements OnInit {
   //new
   isTrackingMode = true;
   timeFormatStr = 'yyyy-MM-dd HH:mm:ss';
-  dateRange: Date[] = [];
+  // dateRange: Date[] = [];
   //data from database
   buoyList: Buoy[] = [];
   projectList: Project[] = [];
@@ -59,10 +61,11 @@ export class NewMapComponent implements OnInit {
     this.buoyService.getAllProject().subscribe(p => this.projectList = p.data.list);
   }
   getPositionList(buoy: any) {
-    if (this.dateRange.length <= 0) {
+    // if (this.dateRange.length <= 0) {
+    if (this.selectedStartDate == null || this.selectedEndDate == null) {
       this.createMessage("info", "choose date range first");
     } else {
-      let dateRange = [Utility.formatDate(this.dateRange[0], this.timeFormatStr), Utility.formatDate(this.dateRange[1], this.timeFormatStr)];
+      let dateRange = [Utility.formatDate(this.selectedStartDate, this.timeFormatStr), Utility.formatDate(this.selectedEndDate, this.timeFormatStr)];
       console.log('imei:', buoy.imei);
       console.log('start time:', dateRange[0]);
       console.log('end time:', dateRange[1]);
@@ -380,7 +383,7 @@ export class NewMapComponent implements OnInit {
   showPositions(positionList: any[]) {
     var data: object[] = [];
 
-    positionList.forEach((position: { id:any; longitude: any; latitude: any; driftingbuoyImei: any; sendtime: any; direction: any; speed: any; }) => {
+    positionList.forEach((position: { id: any; longitude: any; latitude: any; driftingbuoyImei: any; sendtime: any; direction: any; speed: any; }) => {
       // console.log('DEBUG:', position.longitude, position.latitude);
       data.push(
         {
@@ -409,7 +412,7 @@ export class NewMapComponent implements OnInit {
     massMarks.on('mouseover', function (e: any) {
       marker.setPosition(e.data.lnglat);
       console.log(e.data.lnglat);
-      
+
       marker.setLabel({
         content:
           [
@@ -438,7 +441,6 @@ export class NewMapComponent implements OnInit {
   //   });
   // } 
   showHistory(buoyList: any[]) {
-    console.log(this.isTrackingMode);
     if (buoyList == undefined) {
       console.log("No buoy need to track");
     } else {
@@ -607,4 +609,44 @@ export class NewMapComponent implements OnInit {
   logPorjectListDev(): void {
     console.log('current project list:', this.projectList);
   }
+
+
+
+
+
+
+
+  // date picker
+  selectedStartDate: Date | null = null;
+  selectedEndDate: Date | null = null;
+  @ViewChild('endDatePicker') endDatePicker!: NzDatePickerComponent;
+
+  disabledStartDate = (selectedStartDate: Date): boolean => {
+    if (!selectedStartDate || !this.selectedEndDate) {
+      return false;
+    }
+    return selectedStartDate.getTime() > this.selectedEndDate.getTime();
+  };
+
+  disabledEndDate = (selectedEndDate: Date): boolean => {
+    if (!selectedEndDate || !this.selectedStartDate) {
+      return false;
+    }
+    return selectedEndDate.getTime() <= this.selectedStartDate.getTime();
+  };
+
+  handleStartOpenChange(open: boolean): void {
+    if (!open) {
+      this.endDatePicker.open();
+    }
+    console.log('handleStartOpenChange', open);
+  }
+
+  handleEndOpenChange(open: boolean): void {
+    console.log('handleEndOpenChange', open);
+  }
+
+
+
+
 }
