@@ -48,11 +48,14 @@ export class NewMapComponent implements OnInit {
     description: "",
   };
 
+  NewBuoyId: number = -1;
 
   buoyForm!: FormGroup;
   projectForm!: FormGroup;
   buoyFormVisible = false;
   projectFormVisible = false;
+  addBuoyFormVisible = false;
+  addProjectFormVisible = false;
 
   getBuoyList() {
     this.buoyService.getAllBuoy().subscribe(p => this.buoyList = p.data.list);
@@ -98,11 +101,14 @@ export class NewMapComponent implements OnInit {
     this.projectFormOpen();
   }
 
-  addBuoy(): void {//TODO:please complete add buoy function
-
+  addBuoyFormOpen(): void {
+    this.addBuoyFormVisible = true;
+    console.log("add buoy form open");
   }
-  addProject(): void {//TODO:please complete add project function
 
+  addProjectFormOpen(): void {
+    this.addProjectFormVisible = true;
+    console.log("add project form open");
   }
 
   buoyFormOpen(): void {
@@ -113,6 +119,14 @@ export class NewMapComponent implements OnInit {
   buoyFormClose(): void {
     this.buoyFormVisible = false;
     console.log("buoy form close");
+  }
+  addBuoyFormClose(): void {
+    this.addBuoyFormVisible = false;
+    console.log("add buoy form close");
+  }
+  addProjectFormClose(): void {
+    this.addProjectFormVisible = false;
+    console.log("add project form close");
   }
 
 
@@ -126,11 +140,12 @@ export class NewMapComponent implements OnInit {
     console.log("project form close");
   }
 
-  submitBuoyForm(): void {
-    console.log('submit buoy');
+
+  // 添加新游标
+  addBuoy(): void {
+    console.log('add buoy');
     if (this.buoyForm.valid) {
-      console.log(this.buoyForm.value, this.buoyService.updateBuoy(this.buoyForm.value));
-      //TODO:compelet the buoy update form function...to database
+      console.log(this.buoyForm.value, this.buoyService.addBuoy(this.buoyForm.value));
     } else {
       Object.values(this.buoyForm.controls).forEach(control => {
         if (control.invalid) {
@@ -142,11 +157,34 @@ export class NewMapComponent implements OnInit {
     }
   }
 
-  submitProjectForm(): void {
-    console.log('submit prject')
+  deleteBuoy(): void {
+    console.log("delete buoy", this.showingBuoy);
+
+    this.buoyService.deleteBuoy(this.showingBuoy);
+  }
+
+  // 更新游标信息
+  submitBuoyForm(): void {
+    console.log('update buoy');
+    if (this.buoyForm.valid) {
+      console.log(this.buoyForm.value, this.buoyService.updateBuoy(this.buoyForm.value));
+    } else {
+      Object.values(this.buoyForm.controls).forEach(control => {
+        if (control.invalid) {
+          control.markAsDirty();
+          control.updateValueAndValidity({ onlySelf: true });
+        }
+      });
+      console.log("fail");
+    }
+  }
+
+
+  // 添加新项目
+  addProject(): void {
+    console.log('add project');
     if (this.projectForm.valid) {
-      console.log(this.projectForm.value, this.buoyService.updateProject(this.projectForm.value));
-      //TODO:compelet the project update form function...to database
+      console.log(this.projectForm.value, this.buoyService.addProject(this.projectForm.value));
     } else {
       Object.values(this.projectForm.controls).forEach(control => {
         if (control.invalid) {
@@ -158,6 +196,26 @@ export class NewMapComponent implements OnInit {
     }
   }
 
+  deleteProject(): void {
+    console.log("delete project", this.showingProject);
+    this.buoyService.deleteProject(this.showingProject);
+  }
+
+
+  updateProject(): void {
+    console.log('update prject')
+    if (this.projectForm.valid) {
+      console.log(this.projectForm.value, this.buoyService.updateProject(this.projectForm.value));
+    } else {
+      Object.values(this.projectForm.controls).forEach(control => {
+        if (control.invalid) {
+          control.markAsDirty();
+          control.updateValueAndValidity({ onlySelf: true });
+        }
+      });
+      console.log("fail");
+    }
+  }
 
 
 
@@ -236,7 +294,7 @@ export class NewMapComponent implements OnInit {
       id: new FormControl(null, Validators.required),
       name: new FormControl(null, Validators.required),
       imei: new FormControl(null, Validators.required),
-      project: new FormControl(null, Validators.required),
+      projectId: new FormControl(null, Validators.required),
     });
 
     this.projectForm = new FormGroup({

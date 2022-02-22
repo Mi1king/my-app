@@ -28,6 +28,10 @@ export class BuoyService {
   // private addPositionURL = this.positionURL + '/add';  // URL to web api
 
 
+  private deleteBuoyURL = this.buoyURL + '/delete';  // URL to web api
+  private deleteProjectURL = this.projectURL + '/delete';  // URL to web api
+
+
   private updateBuoyURL = this.buoyURL + '/update';  // URL to web api
   private updateProjectURL = this.projectURL + '/update';  // URL to web api
   // private addPositionURL = this.positionURL + '/add';  // URL to web api
@@ -40,6 +44,7 @@ export class BuoyService {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Allow-Methods': 'GET,POST,OPTIONS,DELETE,PUT',
+      // 'Accept': '*/*',
     })
   };
 
@@ -69,11 +74,48 @@ export class BuoyService {
     return this.http.get(this.getConditionalPositionURL, httpOptions);
   }
 
-  updateBuoy(buoy: any) {
-    return this.http.post(this.updateBuoyURL, buoy, this.httpOptions);
+  addBuoy(buoy: any) {
+    return this.http.post(this.addBuoyURL, buoy, this.httpOptions).subscribe(
+      data => {
+        console.log(data);
+      });
   }
-  updateProject(prject: any) {
-    return this.http.post(this.updateProjectURL, prject, this.httpOptions);
+
+  deleteBuoy(buoy: any) {
+    return this.http.post(this.deleteBuoyURL, buoy, this.httpOptions).subscribe(
+      data => {
+        console.log(data);
+      });
+  }
+  
+  updateBuoy(buoy: any) {
+    this.http.post(this.updateBuoyURL, buoy, this.httpOptions).subscribe(
+      data => {
+        console.log(data);
+      });
+  }
+
+
+
+  addProject(project: any) {
+    return this.http.post(this.addProjectURL, project, this.httpOptions).subscribe(
+      data => {
+        console.log(data);
+      });
+  }
+
+  deleteProject(project: any) {
+    return this.http.post(this.deleteProjectURL, project, this.httpOptions).subscribe(
+      data => {
+        console.log(data);
+      });
+  }
+
+  updateProject(project: any) {
+    return this.http.post(this.updateProjectURL, project, this.httpOptions).subscribe(
+      data => {
+        console.log(data);
+      });
   }
 
 
