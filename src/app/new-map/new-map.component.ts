@@ -12,11 +12,21 @@ import { NzFormTooltipIcon } from 'ng-zorro-antd/form';
 import { Utility, DateFormatOption } from '../helper';
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
 import { NzDatePickerComponent } from 'ng-zorro-antd/date-picker';
-
-// import * as $ from 'jquery';
+import { NzMarks } from 'ng-zorro-antd/slider';
+// import * as $ from 'jQuery';
+declare let $: any;
 declare var AMap: any;
 declare var AMapUI: any;
 declare var RemoGeoLocation: any;
+
+// 为速度和进度创建range slider
+declare var speedSlider: any;
+declare var processSlider: any;
+var VEHICLE_PLAY_PROCESS = 0; //车辆当前回放到的百分比进度
+var VEHICLE_PATH_REPLAY_START = 0;//当前回放的起点索引, 
+// 改变速度和改变进度条的时候，根据进度条百分比重新计算该数值，并从该位置开始再次回放
+var routeInfo: any[] = [];
+
 
 @Component({
   selector: 'app-new-map',
@@ -26,6 +36,7 @@ declare var RemoGeoLocation: any;
 
 
 export class NewMapComponent implements OnInit {
+
   //new
   isTrackingMode = true;
   timeFormatStr = 'yyyy-MM-dd HH:mm:ss';
@@ -47,6 +58,11 @@ export class NewMapComponent implements OnInit {
     createtime: new Date(),
     description: "",
   };
+
+
+
+
+
 
   NewBuoyId: number = -1;
 
@@ -75,7 +91,7 @@ export class NewMapComponent implements OnInit {
       this.buoyService.getConditionalPosition(buoy, dateRange).subscribe(p => {
         // this.loading = false;
         this.positionList = p.data.list;
-        console.log(this.positionList);
+        // console.log(this.positionList);
 
         let historyPositionList = this.filterPositionBuoy(buoy)
         if (historyPositionList.length <= 0) {
@@ -244,15 +260,6 @@ export class NewMapComponent implements OnInit {
   selectedValue = this.languageList[0];
   compareFn = (o1: any, o2: any): boolean => (o1 && o2 ? o1.value === o2.value : o1 === o2);
 
-
-
-
-
-
-
-
-
-
   map: any;
 
   positions: Lan[] = [];
@@ -312,6 +319,54 @@ export class NewMapComponent implements OnInit {
     // this.addControls(this.map);
     // this.showPositions();
     // this.makerTrackback();
+
+    speedSlider = $("#ionrange_speed").ionRangeSlider({
+      min: 1,
+      max: 10,
+      step: 0.5,
+      from: 5,
+      prefix: "x",
+      prettify: false,
+      hasGrid: true,
+      onFinish(data: any): void {
+        console.log(this);
+        console.log(data);
+
+        // if (this.carMarker) {
+        //   carMarker.stopMove();
+        // }
+        // // 拖动速度条，放下后触发： 设定车辆速度为当前指定的速度
+        // carSpeed = data.from * 1000;
+        // VEHICLE_PATH_REPLAY_START = Math.round(routeInfo.length * VEHICLE_PLAY_PROCESS / 100);
+        // playCar();
+      },
+    });
+    processSlider = $("#ionrange_process").ionRangeSlider({
+      min: 0,
+      max: 100,
+      step: 1,
+      from: 0,
+      postfix: "%",
+      prettify: false,
+      hasGrid: true,
+      onUpdate(data: any): void {
+        //车辆移动的时候，使用JS方法更新进度条，触发该方法： 记录车辆回放的进度
+        VEHICLE_PLAY_PROCESS = data.from;
+      },
+      // onChange: function (data: any) {
+      //   //手动拖动进度条过程中触发：移动车辆，定位车辆回放位置
+      //   var currentIndex = Math.round(routeInfo.length * data.from / 100);
+      //   var vehicleLocation = routeInfo[currentIndex];
+      //   carMarker.setPosition(new AMap.LngLat(vehicleLocation.lng, vehicleLocation.lat));
+      // },
+      onFinish: function (data: any) {
+        //拖动进度条，确定释放后触发，从当前位置开始回放
+        VEHICLE_PLAY_PROCESS = data.from;
+        // VEHICLE_PATH_REPLAY_START = Math.round(routeInfo.length * VEHICLE_PLAY_PROCESS / 100);
+        // playCar();
+      }
+    });
+
   }
 
   addControls(map: any) {
@@ -507,6 +562,7 @@ export class NewMapComponent implements OnInit {
       if (this.currentTrackingLineList.length > 0) {
         this.stopHistoryTracking();
       }
+
       buoyList.forEach(buoy => {
         this.getPositionList(buoy)
       });
@@ -546,7 +602,7 @@ export class NewMapComponent implements OnInit {
     data.forEach((element: { longitude: any; latitude: any; }) => {
       lineArr.push([element.longitude, element.latitude])
     });
-
+    routeInfo=lineArr;
     var marker = new AMap.Marker({
       map: this.map,
       position: lineArr[0],
@@ -596,6 +652,18 @@ export class NewMapComponent implements OnInit {
     // marker.resumeMove();
     // //停止播放
     // marker.stopMove();
+
+    //添加监听事件： 车辆移动的时候，更新速度窗体位置，记录当前回放百分比
+    AMap.event.addListener(marker, 'moving',  (e:any) => {
+      var lastLocation = e.passedPath[e.passedPath.length - 1];
+      //移动窗体
+      // carWindow.setPosition(lastLocation);
+      //根据gps信息，在源数据中查询当前位置速度
+      // setVehicleSpeedInWidowns(lastLocation);
+      //更新进度条
+      this.buoyMarkerProcess = Math.round((e.passedPath.length + VEHICLE_PATH_REPLAY_START) / routeInfo.length * 100);
+      // $("#ionrange_process").data('ionRangeSlider').update({from: Math.round((e.passedPath.length + VEHICLE_PATH_REPLAY_START) / routeInfo.length * 100)})
+  });
   }
 
   //显示游标信息方法
@@ -619,7 +687,7 @@ export class NewMapComponent implements OnInit {
 
   pauseHistoryTracking() {
     this.trackingMarker.forEach(marker => {
-      marker.stopMove();
+      marker.resumeMove();
       console.log(marker);
     });
   }
@@ -635,6 +703,23 @@ export class NewMapComponent implements OnInit {
       console.log(line);
     });
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   /**
    * Change map`s language
@@ -704,7 +789,91 @@ export class NewMapComponent implements OnInit {
     console.log('handleEndOpenChange', open);
   }
 
+  baseBuoySpeed = 200;
+  buoySpeed=this.baseBuoySpeed;
+  buoyMarkerSpeed = 1;
+  buoyMarkerProcess = 0;
+  buoySpeedMarks: NzMarks = {
+    1: 'x1',
+    2: 'x2',
+    3: 'x3',
+    4: 'x4',
+    5: 'x5',
+    6: 'x6',
+    7: 'x7',
+    8: 'x8',
+    9: 'x9',
+    10: 'x10',
+  };
+  buoyProcessMarks: NzMarks = {
+    // 10: '10%',
+    20: '20%',
+    // 30: '30%',
+    40: '40%',
+    // 50: '50%',
+    60: '60%',
+    // 70: '70%',
+    80: '80%',
+    // 90: '90%',
+    100: '100%',
+  };
+
+  speedOnChange(value: number): void {
+    console.log(`speedOnChange: ${value}`);
+  }
+
+  speedOnAfterChange(value: number[] | number): void {
+    console.log(`speedOnAfterChange: ${value}`);
+    if (this.trackingMarker) {
+      this.trackingMarker.forEach(buoyMarker => {
+        buoyMarker.stopMove();
+      });
+    }
+    // 拖动速度条，放下后触发： 设定车辆速度为当前指定的速度
+    this.buoySpeed = <number>value * this.baseBuoySpeed;
+    VEHICLE_PATH_REPLAY_START = Math.round(routeInfo.length * this.buoyMarkerProcess /100); //计算出当前回放的起点index
+    this.playCar();
+
+  }
+
+
+  processOnChange(value: number): void {
+    //手动拖动进度条过程中触发：移动车辆，定位车辆回放位置
+    console.log(`processOnChange: ${value}`);
+    var currentIndex = Math.round(routeInfo.length * <number>value /100);
+    var vehicleLocation = routeInfo[currentIndex];
+    this.trackingMarker.forEach(buoyMarker => {
+      buoyMarker.stopMove()
+      buoyMarker.setPosition(new AMap.LngLat(vehicleLocation.lng, vehicleLocation.lat));
+      console.log('change susss');
+    });
+  }
+  processOnAfterChange(value: number[] | number): void {
+    //拖动进度条，确定释放后触发，从当前位置开始回放
+    console.log(`processOnAfterChange: ${value}`);
+    VEHICLE_PLAY_PROCESS = <number>value;
+    VEHICLE_PATH_REPLAY_START = Math.round(routeInfo.length * VEHICLE_PLAY_PROCESS/100);
+    this.playCar();
+  }
 
 
 
+  // 车辆开始回放
+  playCar(): void {
+    if (this.trackingMarker) {
+      this.trackingMarker.forEach(buoyMarker => {
+        buoyMarker.stopMove();
+      });
+    }
+    //计算需要回放的GPS路径
+    var replayPath: any[] = [];
+    for (var i = VEHICLE_PATH_REPLAY_START; i < routeInfo.length; i++) {
+      replayPath.push(new AMap.LngLat(routeInfo[i].lng, routeInfo[i].lat));
+    }
+    this.trackingMarker.forEach(buoyMarker => {
+      buoyMarker.moveAlong(replayPath, this.buoySpeed, function (k:any) {
+        return k
+    }, false);
+    });
+  }
 }

@@ -32,9 +32,13 @@
             ],
             "styles": [
               "./node_modules/ng-zorro-antd/ng-zorro-antd.min.css",
-              "src/styles.scss"
+              "src/styles.scss",
+              "./node_modules/ion-rangeslider/css/ion.rangeSlider.css"
             ],
-            "scripts": []
+            "scripts": [
+              "./node_modules/jquery/dist/jquery.min.js",
+              "./node_modules/ion-rangeslider/js/ion.rangeSlider.min.js"
+            ]
           },
           "configurations": {
             "production": {

@@ -1,5 +1,27 @@
 <!-- <div id="amapContainer" class="amap-container"></div> -->
 
+
+<!-- <div class="row">
+  <div class="col-md-12">
+    <div id="ionrange_speed"></div>
+  </div>
+  <div class="col-md-12">
+    <div id="ionrange_process"></div>
+  </div>
+  <div class="col-md-12">
+    <button
+      type="button"
+      class="btn btn-info pull-right"
+      onclick="carMarker.stopMove()"
+    >
+      暂停
+    </button>
+    <button type="button" class="btn btn-info pull-right" onclick="playCar()">
+      播放
+    </button>
+  </div>
+</div> -->
+
 <nz-layout>
   <!-- <nz-sider nzCollapsible nz-menu-divider nzWidth="200px" nzTheme="light"> -->
   <nz-sider nz-menu-divider nzWidth="200px" nzTheme="light">
@@ -650,3 +672,29 @@
     </div>
   </ng-template>
 </nz-drawer>
+
+<!--速度条-->
+<nz-slider
+  [nzMarks]="buoySpeedMarks"
+  nzDots
+  [nzIncluded]="false"
+  [nzStep]="1"
+  [nzMin]="1"
+  [nzMax]="10"
+  nzTooltipVisible="never"
+  [(ngModel)]="buoyMarkerSpeed"
+  (ngModelChange)="speedOnChange($event)"
+  (nzOnAfterChange)="speedOnAfterChange($event)"
+></nz-slider>
+<!--进度条-->
+<nz-slider
+  [nzMarks]="buoyProcessMarks"
+  [nzStep]="1"
+  [nzMin]="0"
+  [nzMax]="100"
+  nzTooltipVisible="always"
+  nzTooltipPlacement="bottom"
+  [(ngModel)]="buoyMarkerProcess"
+  (ngModelChange)="processOnChange($event)"
+  (nzOnAfterChange)="processOnAfterChange($event)"
+></nz-slider>
