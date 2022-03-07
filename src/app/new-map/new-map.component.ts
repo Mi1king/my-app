@@ -98,11 +98,8 @@ export class NewMapComponent implements OnInit {
           console.log("no data with buoy:", buoy.imei);
         } else {
           console.log("start with buoy:", buoy.imei);
-          if (this.isTrackingMode) {
             this.gethistorical(historyPositionList);
-          } else {
             this.showPositions(historyPositionList);
-          }
         }
       })
     }
@@ -512,8 +509,9 @@ export class NewMapComponent implements OnInit {
 
     // 实例化 AMap.MassMarks
     var massMarks = new AMap.MassMarks(data, {
-      zIndex: 5, 	// 海量点图层叠加的顺序
+      zIndex: 199, 	// 海量点图层叠加的顺序
       zooms: [3, 19],	 // 在指定地图缩放级别范围内展示海量点图层
+      opacity: 0,
       style: this.massMarkerStyle 	//多种样式对象的数组
     });
 
