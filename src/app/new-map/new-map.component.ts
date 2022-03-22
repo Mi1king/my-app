@@ -13,6 +13,7 @@ import { Utility, DateFormatOption } from '../helper';
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
 import { NzDatePickerComponent } from 'ng-zorro-antd/date-picker';
 import { NzMarks } from 'ng-zorro-antd/slider';
+import { formatDate } from '@angular/common';
 // import * as $ from 'jQuery';
 declare let $: any;
 declare var AMap: any;
@@ -38,7 +39,7 @@ var routeInfo: any[] = [];
 export class NewMapComponent implements OnInit {
 
   //new
-  isTrackingMode = true;
+  inPlay = false;
   timeFormatStr = 'yyyy-MM-dd HH:mm:ss';
   // dateRange: Date[] = [];
   //data from database
@@ -72,6 +73,8 @@ export class NewMapComponent implements OnInit {
   projectFormVisible = false;
   addBuoyFormVisible = false;
   addProjectFormVisible = false;
+  MassMark: any;
+  infoWindowMarker: any;
 
   getBuoyList() {
     this.buoyService.getAllBuoy().subscribe(p => this.buoyList = p.data.list);
@@ -98,8 +101,9 @@ export class NewMapComponent implements OnInit {
           console.log("no data with buoy:", buoy.imei);
         } else {
           console.log("start with buoy:", buoy.imei);
-            this.gethistorical(historyPositionList);
-            this.showPositions(historyPositionList);
+          this.gethistorical(historyPositionList);
+          this.showPositions(historyPositionList);
+          this.inPlay = true;
         }
       })
     }
@@ -516,9 +520,9 @@ export class NewMapComponent implements OnInit {
     });
 
     massMarks.setMap(this.map);
+    this.MassMark = massMarks;
 
     //鼠标移到mass marker上显示信息
-
     var marker = new AMap.Marker({ content: ' ', map: this.map });
     massMarks.on('mouseover', function (e: any) {
       marker.setPosition(e.data.lnglat);
@@ -531,12 +535,13 @@ export class NewMapComponent implements OnInit {
             ["MEI:", e.data.imei].join(" "),
             ["Longitude:", e.data.lnglat.Q].join(" "),
             ["Latitude:", e.data.lnglat.R].join(" "),
-            ["SendTime:", e.data.sendTime].join(" "),
+            ["SendTime:", formatDate((new Date(e.data.sendTime)), 'yyyy/MM/dd hh:mm:ss', 'en-US', '+0800')].join(" "),
             ["Direction:", e.data.direction].join(" "),
             ["Speed:", e.data.speed].join(" "),
           ].join("<br>")
       })
     });
+    this.infoWindowMarker = marker;
   }
 
   getDataByIMEI(index: string) {
@@ -552,10 +557,12 @@ export class NewMapComponent implements OnInit {
   //   });
   // } 
   showHistory(buoyList: any[]) {
+    if (this.trackingMarker.length != 0) {
+      this.stopHistoryTracking();
+    }
     if (buoyList == undefined) {
       console.log("No buoy need to track");
     } else {
-      // if (this.isTrackingMode) {//回放模式
       console.log("Prepare to tracking for buoy: ", buoyList);
       if (this.currentTrackingLineList.length > 0) {
         this.stopHistoryTracking();
@@ -564,12 +571,6 @@ export class NewMapComponent implements OnInit {
       buoyList.forEach(buoy => {
         this.getPositionList(buoy)
       });
-      // } else {//展示历史轨迹数据模式
-      //   console.log("Prepare to position for buoy: ", buoyList);
-      //   buoyList.forEach(buoy => {
-      //     this.showPositions(buoy);
-      //   });
-      // }
     }
   }
 
@@ -600,7 +601,7 @@ export class NewMapComponent implements OnInit {
     data.forEach((element: { longitude: any; latitude: any; }) => {
       lineArr.push([element.longitude, element.latitude])
     });
-    routeInfo=lineArr;
+    routeInfo = lineArr;
     var marker = new AMap.Marker({
       map: this.map,
       position: lineArr[0],
@@ -652,7 +653,7 @@ export class NewMapComponent implements OnInit {
     // marker.stopMove();
 
     //添加监听事件： 车辆移动的时候，更新速度窗体位置，记录当前回放百分比
-    AMap.event.addListener(marker, 'moving',  (e:any) => {
+    AMap.event.addListener(marker, 'moving', (e: any) => {
       var lastLocation = e.passedPath[e.passedPath.length - 1];
       //移动窗体
       // carWindow.setPosition(lastLocation);
@@ -661,7 +662,7 @@ export class NewMapComponent implements OnInit {
       //更新进度条
       this.buoyMarkerProcess = Math.round((e.passedPath.length + VEHICLE_PATH_REPLAY_START) / routeInfo.length * 100);
       // $("#ionrange_process").data('ionRangeSlider').update({from: Math.round((e.passedPath.length + VEHICLE_PATH_REPLAY_START) / routeInfo.length * 100)})
-  });
+    });
   }
 
   //显示游标信息方法
@@ -700,6 +701,9 @@ export class NewMapComponent implements OnInit {
       line.hide();
       console.log(line);
     });
+    this.MassMark.clear();
+    this.map.remove(this.infoWindowMarker)
+    this.inPlay = false;
   }
 
 
@@ -788,7 +792,7 @@ export class NewMapComponent implements OnInit {
   }
 
   baseBuoySpeed = 200;
-  buoySpeed=this.baseBuoySpeed;
+  buoySpeed = this.baseBuoySpeed;
   buoyMarkerSpeed = 1;
   buoyMarkerProcess = 0;
   buoySpeedMarks: NzMarks = {
@@ -829,7 +833,7 @@ export class NewMapComponent implements OnInit {
     }
     // 拖动速度条，放下后触发： 设定车辆速度为当前指定的速度
     this.buoySpeed = <number>value * this.baseBuoySpeed;
-    VEHICLE_PATH_REPLAY_START = Math.round(routeInfo.length * this.buoyMarkerProcess /100); //计算出当前回放的起点index
+    VEHICLE_PATH_REPLAY_START = Math.round(routeInfo.length * this.buoyMarkerProcess / 100); //计算出当前回放的起点index
     this.playCar();
 
   }
@@ -838,7 +842,7 @@ export class NewMapComponent implements OnInit {
   processOnChange(value: number): void {
     //手动拖动进度条过程中触发：移动车辆，定位车辆回放位置
     console.log(`processOnChange: ${value}`);
-    var currentIndex = Math.round(routeInfo.length * <number>value /100);
+    var currentIndex = Math.round(routeInfo.length * <number>value / 100);
     var vehicleLocation = routeInfo[currentIndex];
     this.trackingMarker.forEach(buoyMarker => {
       buoyMarker.stopMove()
@@ -850,7 +854,7 @@ export class NewMapComponent implements OnInit {
     //拖动进度条，确定释放后触发，从当前位置开始回放
     console.log(`processOnAfterChange: ${value}`);
     VEHICLE_PLAY_PROCESS = <number>value;
-    VEHICLE_PATH_REPLAY_START = Math.round(routeInfo.length * VEHICLE_PLAY_PROCESS/100);
+    VEHICLE_PATH_REPLAY_START = Math.round(routeInfo.length * VEHICLE_PLAY_PROCESS / 100);
     this.playCar();
   }
 
@@ -869,9 +873,9 @@ export class NewMapComponent implements OnInit {
       replayPath.push(new AMap.LngLat(routeInfo[i].lng, routeInfo[i].lat));
     }
     this.trackingMarker.forEach(buoyMarker => {
-      buoyMarker.moveAlong(replayPath, this.buoySpeed, function (k:any) {
+      buoyMarker.moveAlong(replayPath, this.buoySpeed, function (k: any) {
         return k
-    }, false);
+      }, false);
     });
   }
 }
