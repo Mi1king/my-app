@@ -1,3 +1,16 @@
+Angular CLI: 12.2.10
+Node.js: v14.18.1
+Package Manager: npm 6.14.15
+AMAP API: 1.4.3
+NG-ZORRO: 12.1.1
+
+#After clone this dev repo
+cd my-app
+npm install
+ng add ng-zorro-antd@12.1.1
+
+
+
 # MyApp
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.2.10.
